@@ -10,7 +10,6 @@ import networkx as nx               # for graphs
 from cycler import cycler           # for managing plot colors
 import dynamics
 
-
 PROP_CYCLE = plt.rcParams['axes.prop_cycle']
 COLORS = PROP_CYCLE.by_key()['color']
 
@@ -86,7 +85,7 @@ def network(graph):
     #clique_edge = [(a, b) for i, a in enumerate(clique) for b in clique[i+1:]]
     #nx.draw_networkx_edges(graph, pos, edgelist=clique_edge, edge_color='red', lw=10) #
 
-    #nx.draw_networkx_labels(graph, pos)
+    nx.draw_networkx_labels(graph, pos)
     #labels = nx.get_edge_attributes(graph, 'weight')
     #nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels)
 
@@ -103,20 +102,17 @@ def network(graph):
 
     return fig_net, ax_net
 
-def activity(graph, time_plot, neurons_plot, y_plot, other_plots=None, 
-                save_figures=False, bars_time=None):
+def activity(graph, time_plot, y_plot, other_plots=None, clique_lists=None):
 
     fig, ax = plt.subplots()
     ax.set(ylabel='Activity y', xlabel='time (s)')
     my_kwargs = list(rotating_cycler(graph.n_c))
     #ax.set_prop_cycle(cycler)
-    x_lim_index = min(4999, time_plot.shape[0]-1)
-    ax.set_xlim(time_plot[-x_lim_index], time_plot[-1])
 
     #colors = color_map(graph.n_c)
     lines = []
     labels = []
-    for i in range(neurons_plot):
+    for i in range(y_plot.shape[0]):
         for clique, clique_members in enumerate(graph.clique_list):
             if i in clique_members: break
 
@@ -134,34 +130,31 @@ def activity(graph, time_plot, neurons_plot, y_plot, other_plots=None,
     #legend1 = plt.legend(title='Cliques', loc=1, frameon=False)
     #ax.add_artist(legend1)
     
+    x_lim_index = min(4999, time_plot.shape[0]-1)
+    ax.set_xlim(time_plot[-x_lim_index], time_plot[-1])
     ax.set_yticks([0, 1])
     plt.tight_layout()
-    if save_figures:
-        savefig_options = {'papertype' : 'a5', 'dpi' : 300}
-        fig.savefig('{}x{}_s{}_r{}'.format(graph.n_c, graph.s_c, graph.sparse, gain_rule), **savefig_options)
-        #plt.close(fig)
-        #Y = 0
+
     return fig, ax
 
-def full_depletion(time_plot, full_vesicles_inh_plot, vesic_release_inh_plot):
+def full_depletion(time_plot, full_vesicles_plot, vesic_release_plot):
 
     fig_fulldep, ax_fulldep = plt.subplots()
 
-    effective_weights_plot_inh = vesic_release_inh_plot * full_vesicles_inh_plot
-    ax_fulldep.plot(time_plot, full_vesicles_inh_plot.T, label=r'$\varphi_i$')
-    ax_fulldep.plot(time_plot, vesic_release_inh_plot.T, label='$u_i$')
+    effective_weights_plot_inh = vesic_release_plot * full_vesicles_plot
+    #ax_fulldep.plot(time_plot, full_vesicles_plot.T, label=r'$\varphi_i$')
+    #ax_fulldep.plot(time_plot, vesic_release_plot.T, label='$u_i$')
     ax_fulldep.plot(time_plot, effective_weights_plot_inh.T, label=r'$\varphi_i \cdot u_i$')
-    u_phi_max = effective_weights_plot_inh[:, 100:].max()
-    ax_fulldep.set_yticks([0, 1, u_phi_max, dynamics.U_max])
-    ax_fulldep.set_yticklabels(['0', '1', '{:2.1f}'.format(u_phi_max), '$U_{max}$'])
+    #u_phi_max = effective_weights_plot_inh[:, 100:].max()
+    #ax_fulldep.set_yticks([0, 1, u_phi_max, dynamics.U_max])
+    #ax_fulldep.set_yticklabels(['0', '1', '{:2.1f}'.format(u_phi_max), '$U_{max}$'])
     ax_fulldep.legend(frameon=False, prop={'size': 15})
 
-    ax_fulldep.set(ylim=[-0.02, dynamics.U_max + .02], xlim=[1.8, 3.8])
+    #ax_fulldep.set(ylim=[-0.02, dynamics.U_max + .02])
 
     #ax_fulldep.set_xticks([1.8, 2.3, 2.8, 3.3])
     #ax_fulldep.set_xticklabels(['0', '0.5', '1', '1.5'])
     plt.legend()
-    plt.tight_layout()
     return fig_fulldep, ax_fulldep
 
 def input_signal(graph, time_plot, neurons_plot, input_pl):
